@@ -62,7 +62,7 @@ This Python script automates the process of logging into WordPress sites, upload
 2. Run the script:
 
    ```bash
-   python script.py
+   python main.py
    ```
 
 3. Follow the prompts:
@@ -87,7 +87,7 @@ This Python script automates the process of logging into WordPress sites, upload
 ## Example
 
 ```bash
-$ python script.py
+$ python main.py
 Masukkan nama file list URL (contoh: list.txt): list.txt
 Masukkan jumlah thread: 10
 
