@@ -31,8 +31,8 @@ This Python script automates the process of logging into WordPress sites, upload
 1. Clone or download this repository:
 
    ```bash
-   git clone https://github.com/your-username/your-repo.git
-   cd your-repo
+   git clone https://github.com/InMyMine7/wp-upshell.git
+   cd wp-upshell
    ```
 2. Install the required Python libraries:
 
